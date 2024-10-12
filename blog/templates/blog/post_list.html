@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Блог</title>
+    <style>-->
+        /* Основные стили */
+        body {
+            font-family: Arial, sans-serif;  /* Шрифт для всего документа */
+            background-color: #f4f4f9; /* Светлый бело-серый фон */
+            color: #333; /* Тёмно-серый текст для текста */
+            line-height: 1.6;  /* высота строки */
+            margin: 0; /* Убираем внешние отступы */
+            padding: 20px;  /* добавляем внутренние отступы */
+        }
+
+        h1 {
+            color: #091057; /* Тёмно-синий цвет заголовка */
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #024CAA; /* Чуть светлее для подзаголовков */
+            font-size: 1.8em;
+        }
+
+        h3 {
+            color: #006BFF; /* Синий для авторов */
+            font-size: 1.2em;
+        }
+
+        p {
+            margin-bottom: 15px; /* Нижний отступ для абзацев */
+        }
+
+        small {
+            color: #95a5a6; /* Светло-серый для даты публикации */
+        }
+
+        /* Стили для списка постов */
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #ffffff; /* Белый фон для каждого поста */
+            border: 1px solid #e2e2e2; /* Лёгкая серая рамка */
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 8px; /* Скругленные углы */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Лёгкий теневой эффект */
+        }
+
+        /* Стили для ссылок */
+        a {
+            color: #3498db; /* Мягкий синий для ссылок */
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #2980b9; /* Более тёмный синий при наведении */
+        }
+
+        /* Стили для пагинации */
+        .pagination {
+            text-align: center;  /* Выравниваем содержимое по центру */
+            margin-top: 20px;  /* добавляем верхний отступ */
+        }
+
+        .step-links {
+            display: inline-block;
+        }
+
+        /* Устанавливаем стили для ссылок пагинации (цвет, отступы, рамка, скругленные углы) */
+        .step-links a {
+            color: #3498db;
+            padding: 10px 15px;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            margin: 0 5px;
+            text-decoration: none;
+        }
+
+        /* Устанавливаем фон и цвет текста при наведении на ссылку пагинации */
+        .step-links a:hover {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .current {
+            font-weight: bold;
+            color: #7f8c8d; /* Серый текст для текущей страницы */
+        }
+
+        /* Стили для выпадающего списка */
+        .items-per-page {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Мой блог</h1>
+    <ul>
+    {% for post in posts %}  <!-- Цикл, по всем постам в переменной posts, которую мы определили во views -->
+        <li>
+            <!-- Выводим соответствующие поля поста -->
+            <h2>{{ post.title }}</h2>
+            <h3>{{ post.author }}</h3>
+            <p>{{ post.content|linebreaks }}</p>  <!-- Используем фильтр linebreaks чтобы сохранить форматирование
+            текста как в административной панели-->
+            <small>{{ post.pub_date }}</small>
+        </li>
+    {% endfor %}
+    </ul>
+
+    <div class="pagination">
+        <form method="get">  <!-- Создаем форму с методом GET, чтобы параметры пагинации передавались через URL -->
+            <span class="step-links">
+
+                <!-- Если текущая страница не первая, отображаются ссылки на первую и предыдущую страницы -->
+                {% if posts.has_previous %}
+                    <a href="?page=1&items={{ items_per_page }}">&laquo; первая</a>
+                    <a href="?page={{ posts.previous_page_number }}&items={{ items_per_page }}">предыдущая</a>
+                {% endif %}
+
+                <!-- Цикл проходит по всем номерам страниц и отображает их. Если номер совпадает с текущей страницей,
+                он выделяется как текущая страница -->
+                {% for num in posts.paginator.page_range %}
+                    {% if posts.number == num %}
+                        <span class="current">{{ num }}</span>
+                    {% else %}
+                        <a href="?page={{ num }}&items={{ items_per_page }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+               <!-- Если текущая страница не последняя, отображаются ссылки на следующую и последнюю страницы -->
+                {% if posts.has_next %}
+                    <a href="?page={{ posts.next_page_number }}&items={{ items_per_page }}">следующая</a>
+                    <a href="?page={{ posts.paginator.num_pages }}&items={{ items_per_page }}">последняя &raquo;</a>
+                {% endif %}
+            </span>
+
+            <!-- Выпадающий список для выбора количества элементов на странице -->
+            <span class="items-per-page">
+                <label for="items">Элементов на странице:</label>
+                <!-- При изменении значения списка форма автоматически отправляется с
+                помощью JavaScript (onchange="this.form.submit()") -->
+                <select name="items" id="items" onchange="this.form.submit()">
+                    <option value="3" {% if items_per_page == 3 %}selected{% endif %}>3</option>
+                    <option value="5" {% if items_per_page == 5 %}selected{% endif %}>5</option>
+                    <option value="7" {% if items_per_page == 7 %}selected{% endif %}>7</option>
+                    <option value="10" {% if items_per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="12" {% if items_per_page == 12 %}selected{% endif %}>12</option>
+                </select>
+            </span>
+        </form>
+    </div>
+</body>
+</html>
+
